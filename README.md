@@ -43,6 +43,34 @@ $ cd ghost-static-site-generator
 $ npm install
 ```
 
+### Docker
+To install docker see: [https://docs.docker.com/engine/install/](https://docs.docker.com/engine/install/)
+1. [Optional Build] Clone this repository
+```bash
+$ git clone https://github.com/itsignacioportal/ghost-static-site-generator/
+$ cd ghost-static-site-generator
+$ docker build -t ghost-static-site-generator:latest .
+```
+
+2. Run image with volume mounted.
+#### Network config
+    - to access localhost add `--network host` 
+    - to access another container
+        1. `docker network create --attachable ghost-scrape`
+        2. `docker network connect ghost-scrape <YOUR GHOST CONTAINER>`
+        3. add `--network ghost-scrape` to your command
+
+```bash
+# Make output dir
+$ mkdir ./data
+
+# Run and remove container when done
+$ docker run --rm -it \
+    -v ./data:/data \
+    SimonM0/ghost-static-site-generator:latest \
+    --domain http://www.myhiddenserver.com:4538 \
+    --productionDomain http://www.myblog.com
+```
 
 ## Usages
 By default the tool will default to `http://localhost:2368` for the domain and generate a folder called `static` in the directory that you run the tool in.
