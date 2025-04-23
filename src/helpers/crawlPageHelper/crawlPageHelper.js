@@ -6,7 +6,7 @@ const crawlHistory = new Set();
 
 const contentOnError = () => {
   const contentOnErrorHelpText = execSync(
-    'wget --help | grep "content-on-error" || true',
+    `${OPTIONS.MIRROR_COMMAND} --help | grep "content-on-error" || true`,
   ).toString();
 
   return `${contentOnErrorHelpText}`
@@ -26,12 +26,14 @@ const crawlPageHelper = (url) => {
   if (crawlHistory.has(url)) {
     return;
   }
-  const wgetCommand = `wget -q ${OPTIONS.SHOW_PROGRESS_BAR}--recursive `
+  const wgetCommand = `${OPTIONS.MIRROR_COMMAND} -q ${OPTIONS.SHOW_PROGRESS_BAR}--recursive `
+    + `${OPTIONS.X_FORWARDED_PROTO}`
     + '--timestamping '
     + '--page-requisites '
     + '--no-parent '
     + '--no-host-directories '
     + '--restrict-file-name=unix '
+    + ((OPTIONS.MIRROR_COMMAND === 'wpull') ? `--plugin-script ${OPTIONS.PLUGIN_SCRIPT} ` : '')
     + `--directory-prefix ${OPTIONS.STATIC_DIRECTORY} ${contentOnError()} `
     + `${saveAsReferer()}`
     + `${url}`;
