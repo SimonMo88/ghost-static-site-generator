@@ -21,7 +21,10 @@ const generateStaticSite = async () => {
      */
     await mkdirp(`${OPTIONS.STATIC_DIRECTORY}/content`);
 
-    const urls = [
+    const urls = OPTIONS.MIRROR_COMMAND === 'wpull' ? [
+      // this simply adds extra requirements to the same wpull invocation as the main site
+      `${OPTIONS.SOURCE_DOMAIN}/ ${OPTIONS.SOURCE_DOMAIN}/robots.txt ${OPTIONS.SOURCE_DOMAIN}/404 ${OPTIONS.SOURCE_DOMAIN}/sitemap.xsl ${OPTIONS.SOURCE_DOMAIN}/public/ghost.css`,
+    ] : [
       `${OPTIONS.SOURCE_DOMAIN}/`,
       `${OPTIONS.SOURCE_DOMAIN}/sitemap.xsl`,
       `${OPTIONS.SOURCE_DOMAIN}/sitemap.xml`,
@@ -32,9 +35,10 @@ const generateStaticSite = async () => {
       `${OPTIONS.SOURCE_DOMAIN}/public/404-ghost@2x.png`,
       `${OPTIONS.SOURCE_DOMAIN}/public/404-ghost@2x.png`,
       `${OPTIONS.SOURCE_DOMAIN}/assets/built/screen.css`,
-	  `${OPTIONS.SOURCE_DOMAIN}/assets/built/casper.js`,
-	  `${OPTIONS.SOURCE_DOMAIN}/assets/built/global.css`,
+      `${OPTIONS.SOURCE_DOMAIN}/assets/built/casper.js`,
+      `${OPTIONS.SOURCE_DOMAIN}/assets/built/global.css`,
     ];
+  
 
     if(OPTIONS.SOURCE_DOMAIN.startsWith("http://127.0.0.1")){
     	console.warn("\x1b[33m%s\x1b[0m", "[WARNING]: You specified \"127.0.0.1\" as the host for your site, but the ghost default host is \"localhost\". If your \"--domain\" does not exactly match the value of \"url\" in your ghost \"config.development.json\" or \"config.json\", gssg will fail!")
