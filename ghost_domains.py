@@ -32,6 +32,9 @@ class GhostDomainsPlugin(WpullPlugin):
             print(f'accept check: {item_session.request.url} -> {adjusted_url}')
             return False
         elif item_session.request.url.startswith(SOURCE_BASE):
+            if item_session.request.url.startswith(SOURCE_BASE + 'ghost/'):
+                print(f'accept check: denying ghost admin interface: {item_session.request.url}')
+                return False
             return True
         return False
 
