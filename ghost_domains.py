@@ -9,12 +9,15 @@ from wpull.application.plugin import WpullPlugin, PluginFunctions, hook, event
 from wpull.protocol.abstract.request import BaseResponse
 from wpull.pipeline.session import ItemSession
 import wpull
+import logging
 
 # FIXME: pass these as options:
 SOURCE_BASE = 'http://localhost:2368/'
 PRODUCTION_BASE = 'https://ghost.example.com/'
 
 class GhostDomainsPlugin(WpullPlugin):
+    logger = logging.getLogger('wpull.plugin.ghost_domains') # this has to start with wpull or the logging will be filtered
+
     def activate(self):
         super().activate()
         import pprint, os, sys
@@ -29,26 +32,26 @@ class GhostDomainsPlugin(WpullPlugin):
         if item_session.request.url.startswith(PRODUCTION_BASE):
             adjusted_url = item_session.request.url.replace(PRODUCTION_BASE, SOURCE_BASE, 1)
             item_session.add_child_url(adjusted_url)
-            print(f'accept check: {item_session.request.url} -> {adjusted_url}')
+            self.logger.info(f'Production domain remap: rather than retrieving {item_session.request.url}, will retrieve {adjusted_url}')
             return False
         elif item_session.request.url.startswith(SOURCE_BASE):
             if item_session.request.url.startswith(SOURCE_BASE + 'ghost/'):
-                print(f'accept check: denying ghost admin interface: {item_session.request.url}')
+                self.logger.info(f'Not retrieving ghost admin interface url: {item_session.request.url}')
                 return False
             return True
         return False
 
     @event(PluginFunctions.get_urls)
     def my_get_urls(self, item_session: ItemSession):
-        print(f'get_urls: {item_session.request.url}')
+        self.logger.debug(f'get_urls: {item_session.request.url}')
 
     @event(PluginFunctions.queued_url)
     def my_queued_url(self, url_info: wpull.url.URLInfo):
-        print(f'queued_url: {url_info.url}')
+        self.logger.debug(f'queued_url: {url_info.url}')
 
     @event(PluginFunctions.dequeued_url)
     def my_dequeued_url(self, url_info: wpull.url.URLInfo, record_info: wpull.pipeline.item.URLRecord):
-        print(f'dequeued_url: {url_info.url} -> {record_info.url}')
+        self.logger.debug(f'dequeued_url: {url_info.url} -> {record_info.url}')
 
 
 if __name__ == '__main__':
