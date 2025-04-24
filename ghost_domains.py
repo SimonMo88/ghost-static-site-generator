@@ -41,15 +41,17 @@ class GhostDomainsPlugin(WpullPlugin):
             return True
         return False
 
-    @event(PluginFunctions.get_urls)
+    # to enable these stubs, uncomment the @event decorator
+
+    # @event(PluginFunctions.get_urls)
     def my_get_urls(self, item_session: ItemSession):
         self.logger.debug(f'get_urls: {item_session.request.url}')
 
-    @event(PluginFunctions.queued_url)
+    # @event(PluginFunctions.queued_url)
     def my_queued_url(self, url_info: wpull.url.URLInfo):
         self.logger.debug(f'queued_url: {url_info.url}')
 
-    @event(PluginFunctions.dequeued_url)
+    # @event(PluginFunctions.dequeued_url)
     def my_dequeued_url(self, url_info: wpull.url.URLInfo, record_info: wpull.pipeline.item.URLRecord):
         self.logger.debug(f'dequeued_url: {url_info.url} -> {record_info.url}')
 
