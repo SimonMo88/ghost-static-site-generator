@@ -42,9 +42,11 @@ const crawlPageHelper = (url) => {
 
   try {
     console.log(`Fetching: ${url}`);
+    // the SOURCE_DOMAIN and PRODUCTION_DOMAIN are passed to the wpull ghost_domains plugin using environment variables
+    const env = { ...process.env, SOURCE_DOMAIN: OPTIONS.SOURCE_DOMAIN, PRODUCTION_DOMAIN: OPTIONS.PRODUCTION_DOMAIN};
     execSync(
       wgetCommand,
-      { stdio: 'inherit' },
+      { env, stdio: 'inherit' },
     );
 
     crawlHistory.add(url);

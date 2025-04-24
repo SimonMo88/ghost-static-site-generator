@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
 """This is a plugin for wpull that intelligently adjusts domains when mirroring a ghost site for static serving
-It is intended for use with the --plugin-script option for wpull, not to be run as a main program"""
+It is intended for use with the --plugin-script option for wpull, not to be run as a main program
+Note that the SOURCE_DOMAIN and PRODUCTION_DOMAIN values must be passed to wpull as environment variables"""
 
 import re
 from wpull.application.hook import Actions
@@ -10,32 +11,37 @@ from wpull.protocol.abstract.request import BaseResponse
 from wpull.pipeline.session import ItemSession
 import wpull
 import logging
-
-# FIXME: pass these as options:
-SOURCE_BASE = 'http://localhost:2368/'
-PRODUCTION_BASE = 'https://ghost.example.com/'
+import os
 
 class GhostDomainsPlugin(WpullPlugin):
     logger = logging.getLogger('wpull.plugin.ghost_domains') # this has to start with wpull or the logging will be filtered
+    SOURCE_DOMAIN = os.environ.get('SOURCE_DOMAIN')
+    PRODUCTION_DOMAIN = os.environ.get('PRODUCTION_DOMAIN')
 
     def activate(self):
         super().activate()
-        import pprint, os, sys
-        pprint.pprint(os.environ)
-        pprint.pprint(sys.argv)
+        if not self.SOURCE_DOMAIN:
+            self.logger.warn(f"Did not find SOURCE_DOMAIN in environment; will not remap ghost production urls")
+        if not self.PRODUCTION_DOMAIN:
+            self.logger.warn(f"Did not find PRODUCTION_DOMAIN in environment; will not remap ghost production urls")
+        if self.SOURCE_DOMAIN and self.PRODUCTION_DOMAIN:
+            self.logger.info(f"Will remap {self.PRODUCTION_DOMAIN} to {self.SOURCE_DOMAIN}")
 
     def deactivate(self):
         super().deactivate()
 
     @hook(PluginFunctions.accept_url)
     def my_accept_func(self, item_session: ItemSession, verdict: bool, reasons: dict) -> bool:
-        if item_session.request.url.startswith(PRODUCTION_BASE):
-            adjusted_url = item_session.request.url.replace(PRODUCTION_BASE, SOURCE_BASE, 1)
+        if not self.PRODUCTION_DOMAIN or not self.SOURCE_DOMAIN:
+            # this means that this is not properly set up in order to be able to filter domains
+            return True
+        if item_session.request.url.startswith(self.PRODUCTION_DOMAIN):
+            adjusted_url = item_session.request.url.replace(self.PRODUCTION_DOMAIN, self.SOURCE_DOMAIN, 1)
             item_session.add_child_url(adjusted_url)
             self.logger.info(f'Production domain remap: rather than retrieving {item_session.request.url}, will retrieve {adjusted_url}')
             return False
-        elif item_session.request.url.startswith(SOURCE_BASE):
-            if item_session.request.url.startswith(SOURCE_BASE + 'ghost/'):
+        elif item_session.request.url.startswith(self.SOURCE_DOMAIN):
+            if item_session.request.url.startswith(self.SOURCE_DOMAIN.rstrip('/') + '/ghost/'):
                 self.logger.info(f'Not retrieving ghost admin interface url: {item_session.request.url}')
                 return False
             return True
